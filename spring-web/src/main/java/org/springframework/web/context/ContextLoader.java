@@ -140,7 +140,9 @@ public class ContextLoader {
 		// This is currently strictly internal and not meant to be customized
 		// by application developers.
 		try {
+			//读取名为ContextLoader.properties的属性文件
 			ClassPathResource resource = new ClassPathResource(DEFAULT_STRATEGIES_PATH, ContextLoader.class);
+			//载入此资源，放入defaultStrategies中
 			defaultStrategies = PropertiesLoaderUtils.loadProperties(resource);
 		}
 		catch (IOException ex) {
@@ -259,6 +261,8 @@ public class ContextLoader {
 	 * @see #CONFIG_LOCATION_PARAM
 	 */
 	public WebApplicationContext initWebApplicationContext(ServletContext servletContext) {
+		//从ServletContext中查找，是否存在以
+		// WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE为Key的值
 		if (servletContext.getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE) != null) {
 			throw new IllegalStateException(
 					"Cannot initialize context because there is already a root application context present - " +
@@ -275,11 +279,13 @@ public class ContextLoader {
 		try {
 			// Store context in local instance variable, to guarantee that
 			// it is available on ServletContext shutdown.
+			// 创建web上下文，默认是XmlWebApplicationContext
 			if (this.context == null) {
 				this.context = createWebApplicationContext(servletContext);
 			}
 			if (this.context instanceof ConfigurableWebApplicationContext) {
 				ConfigurableWebApplicationContext cwac = (ConfigurableWebApplicationContext) this.context;
+				// 如果该容器还没有刷新过
 				if (!cwac.isActive()) {
 					// The context has not yet been refreshed -> provide services such as
 					// setting the parent context, setting the application context id, etc
@@ -289,9 +295,12 @@ public class ContextLoader {
 						ApplicationContext parent = loadParentContext(servletContext);
 						cwac.setParent(parent);
 					}
+					// 配置并刷新容器
 					configureAndRefreshWebApplicationContext(cwac, servletContext);
 				}
 			}
+			//将ApplicationContext放入ServletContext中，
+			// 其key为<WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE
 			servletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, this.context);
 
 			ClassLoader ccl = Thread.currentThread().getContextClassLoader();
@@ -299,6 +308,8 @@ public class ContextLoader {
 				currentContext = this.context;
 			}
 			else if (ccl != null) {
+				//将ApplicationContext放入ContextLoader的全局静态常量Map中，
+				// 其中key为：Thread.currentThread().getContextClassLoader()即当前线程类加载器
 				currentContextPerThread.put(ccl, this.context);
 			}
 
@@ -329,11 +340,13 @@ public class ContextLoader {
 	 * @see ConfigurableWebApplicationContext
 	 */
 	protected WebApplicationContext createWebApplicationContext(ServletContext sc) {
+		//获取Context的Class类类型
 		Class<?> contextClass = determineContextClass(sc);
 		if (!ConfigurableWebApplicationContext.class.isAssignableFrom(contextClass)) {
 			throw new ApplicationContextException("Custom context class [" + contextClass.getName() +
 					"] is not of type [" + ConfigurableWebApplicationContext.class.getName() + "]");
 		}
+		//根据得到的Class使用反射实例化上下文对象
 		return (ConfigurableWebApplicationContext) BeanUtils.instantiateClass(contextClass);
 	}
 
@@ -346,9 +359,12 @@ public class ContextLoader {
 	 * @see org.springframework.web.context.support.XmlWebApplicationContext
 	 */
 	protected Class<?> determineContextClass(ServletContext servletContext) {
+		// 自定义上下文，否则就默认创建XmlWebApplicationContext
+		//CONTEXT_CLASS_PARAM="contextClass"
 		String contextClassName = servletContext.getInitParameter(CONTEXT_CLASS_PARAM);
 		if (contextClassName != null) {
 			try {
+				//如果有，直接forName得到Class
 				return ClassUtils.forName(contextClassName, ClassUtils.getDefaultClassLoader());
 			}
 			catch (ClassNotFoundException ex) {
@@ -357,8 +373,11 @@ public class ContextLoader {
 			}
 		}
 		else {
+			// 从属性文件中加载类名，也就是org.springframework.web.context.support.XmlWebApplicationContext
+			//从defaultStrategies中获取WebApplicationContext全类名对应的Property
 			contextClassName = defaultStrategies.getProperty(WebApplicationContext.class.getName());
 			try {
+				//根据ClassName得到Class
 				return ClassUtils.forName(contextClassName, ContextLoader.class.getClassLoader());
 			}
 			catch (ClassNotFoundException ex) {

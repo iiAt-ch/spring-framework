@@ -390,19 +390,23 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 	@Override
 	@Nullable
 	public final HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
+		//获取handler的具体逻辑，留给子类实现
 		Object handler = getHandlerInternal(request);
 		if (handler == null) {
+			// 如果获取到的handler为null，则采用默认的handler，即属性defaultHandler
 			handler = getDefaultHandler();
 		}
 		if (handler == null) {
+			//如果连DefaultHandler也为空，则直接返回空
 			return null;
 		}
 		// Bean name or resolved handler?
+		//如果handler是beanName， 从容器里获取对应的bean
 		if (handler instanceof String) {
 			String handlerName = (String) handler;
 			handler = obtainApplicationContext().getBean(handlerName);
 		}
-
+		//根据handler和request获取处理器链HandlerExecutionChain
 		HandlerExecutionChain executionChain = getHandlerExecutionChain(handler, request);
 
 		if (logger.isTraceEnabled()) {
@@ -462,10 +466,19 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 	 * @see #getAdaptedInterceptors()
 	 */
 	protected HandlerExecutionChain getHandlerExecutionChain(Object handler, HttpServletRequest request) {
+		//判断handler是不是执行器链，如果不是则创建一个执行器链
 		HandlerExecutionChain chain = (handler instanceof HandlerExecutionChain ?
 				(HandlerExecutionChain) handler : new HandlerExecutionChain(handler));
 
 		String lookupPath = this.urlPathHelper.getLookupPathForRequest(request, LOOKUP_PATH);
+		//包装拦截器
+		/**
+		 * 		<mvc:interceptor>
+		 * 			<mvc:mapping path="/shopadmin/**" />
+		 * 			<bean id="ShopInterceptor"
+		 * 				class="com.imooc.o2o.interceptor.shopadmin.ShopLoginInterceptor" />
+		 * 		</mvc:interceptor>
+		 */
 		for (HandlerInterceptor interceptor : this.adaptedInterceptors) {
 			if (interceptor instanceof MappedInterceptor) {
 				MappedInterceptor mappedInterceptor = (MappedInterceptor) interceptor;

@@ -20,6 +20,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.lang.Nullable;
 
 /**
+ * 关于对象初始化前后的回调
  * Factory hook that allows for custom modification of new bean instances &mdash;
  * for example, checking for marker interfaces or wrapping beans with proxies.
  *
@@ -70,6 +71,7 @@ public interface BeanPostProcessor {
 	 * @throws org.springframework.beans.BeansException in case of errors
 	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet
 	 */
+	//该方法在bean实例化完毕（且已经注入完毕），在afterPropertiesSet或自定义init方法执行之前
 	@Nullable
 	default Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
 		return bean;
@@ -96,6 +98,7 @@ public interface BeanPostProcessor {
 	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet
 	 * @see org.springframework.beans.factory.FactoryBean
 	 */
+	//在afterPropertiesSet或自定义init方法执行之后
 	@Nullable
 	default Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		return bean;

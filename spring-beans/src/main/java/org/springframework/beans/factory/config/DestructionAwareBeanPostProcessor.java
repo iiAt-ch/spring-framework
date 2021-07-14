@@ -19,6 +19,7 @@ package org.springframework.beans.factory.config;
 import org.springframework.beans.BeansException;
 
 /**
+ * 处理对象销毁的前置回调
  * Subinterface of {@link BeanPostProcessor} that adds a before-destruction callback.
  *
  * <p>The typical usage will be to invoke custom destruction callbacks on
@@ -41,6 +42,7 @@ public interface DestructionAwareBeanPostProcessor extends BeanPostProcessor {
 	 * @see org.springframework.beans.factory.DisposableBean#destroy()
 	 * @see org.springframework.beans.factory.support.AbstractBeanDefinition#setDestroyMethodName(String)
 	 */
+	//这里实现销毁对象的逻辑
 	void postProcessBeforeDestruction(Object bean, String beanName) throws BeansException;
 
 	/**
@@ -54,6 +56,7 @@ public interface DestructionAwareBeanPostProcessor extends BeanPostProcessor {
 	 * be called for this bean instance eventually, or {@code false} if not needed
 	 * @since 4.3
 	 */
+	//判断是否需要处理这个对象的销毁
 	default boolean requiresDestruction(Object bean) {
 		return true;
 	}

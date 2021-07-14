@@ -166,11 +166,20 @@ public abstract class AbstractRefreshableWebApplicationContext extends AbstractR
 	 */
 	@Override
 	protected void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
+		//添加 ServletContextAwareProcessor 到 BeanFactory 容器中，
+		// 该 processor 实现 BeanPostProcessor 接口，
+		// 主要用于将ServletContext 传递给实现了 ServletContextAware 接口的 bean
 		beanFactory.addBeanPostProcessor(new ServletContextAwareProcessor(this.servletContext, this.servletConfig));
+		//忽略掉相关的Aware类
 		beanFactory.ignoreDependencyInterface(ServletContextAware.class);
 		beanFactory.ignoreDependencyInterface(ServletConfigAware.class);
-
+		//注册默认的web级别的scope到 beanFactory 中，
+		// 以便 WebApplicationContext 可以使用它们。
+		// 比如 "request" , "session" , "globalSession" , "application"
 		WebApplicationContextUtils.registerWebApplicationScopes(beanFactory, this.servletContext);
+		//注册 WEB 应用特定的 Environment bean 到 beanFactory 中，
+		// 以便WebApplicationContext 可以使用它们。
+		// 如："contextAttributes","contextParameters"之类的额外属性
 		WebApplicationContextUtils.registerEnvironmentBeans(beanFactory, this.servletContext, this.servletConfig);
 	}
 
@@ -207,7 +216,9 @@ public abstract class AbstractRefreshableWebApplicationContext extends AbstractR
 	 */
 	@Override
 	protected void initPropertySources() {
+		// 取得配置过程中创建的容器环境
 		ConfigurableEnvironment env = getEnvironment();
+		// 初始化 Environment 的 propertySources 属性
 		if (env instanceof ConfigurableWebEnvironment) {
 			((ConfigurableWebEnvironment) env).initPropertySources(this.servletContext, this.servletConfig);
 		}
